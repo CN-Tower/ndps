@@ -4,6 +4,7 @@ module['exports'] = function () {
   var httpProxy = require('http-proxy');
   var valueLooker = require('value-looker');
   var ProgressBar = require('progress');
+  var mockServer = require('./mock');
 
   var proxies, proxyStr;
   var proxyServer, httpServer;
@@ -15,9 +16,8 @@ module['exports'] = function () {
   };
 
   var isMockStarted = false;
-  var isServerOnInit = true;
+  var isSysAfterInit = false;
   var isSysAvailable = true;
-  var isHaveNewTask = false;
 
   var proxyPath = 'proxy.conf.js';
   var PORT = 8181;
@@ -28,27 +28,23 @@ module['exports'] = function () {
 
 
   /**
-   * 监听代理配置文件
+   * 监听代理配置文件(proxy.conf.js)
    ***************************************************************************/
   function watchProxyConfigFile() {
     fs.watchFile('./proxy.conf.js', {persistent: true, interval: 500}, function(status) {
-      if (status) {
-        if (isSysAvailable) {
-          getProxyConfig();
-        } else {
-          isHaveNewTask = true;
-        }
+      if (status && isSysAvailable) {
+        getProxyConfig();
       }
     });
   }
 
   /**
-   * 获取配置文件的代理配置
+   * 获取具体代理配置
    ***************************************************************************/
   function getProxyConfig() {
     isSysAvailable = false;
 
-    if (!isServerOnInit) valueLooker('Checking changes...', {title: 'Msg From Proxy-Server', theme: 'verbose'});
+    if (isSysAfterInit) valueLooker('Checking changes...', {title: 'Msg From NDPS', theme: 'verbose'});
 
     fs.readFile(proxyPath, 'utf8', function (err, proxyData) {
       if(err) throw err;
@@ -60,19 +56,25 @@ module['exports'] = function () {
       eval(proxyData.split('/*proxies*/')[1]);
 
       if (!proxies.hasOwnProperty(proxyCode)) {
-        var proxyErrHint = 'Proxy target error, please select again!';
-        if (isServerOnInit) throw new Error(proxyErrHint);
-        valueLooker(proxyErrHint, {title: 'Msg From Proxy-Server', theme: 'error'});
-        checkTaskStatusOnMissionEnd();
+        var proxyErrHint = 'Proxy error, please select again!';
+        if (!isSysAfterInit) throw new Error(proxyErrHint);
+        isSysAvailable = true;
+        valueLooker(proxyErrHint, {title: 'Msg From NDPS', theme: 'error'});
 
       } else if (proxies[proxyCode] === proxyStr) {
-        valueLooker('No changes were detected!', {title: 'Msg From Proxy-Server', theme: 'warn'});
-        checkTaskStatusOnMissionEnd();
+        isSysAvailable = true;
+        valueLooker('No changes were detected!', {title: 'Msg From NDPS', theme: 'warn'});
 
       } else {
-        if (proxyCode === 0 && !isMockStarted) createMockProxyServer();
         proxyStr = proxies[proxyCode];
-        httpServer ? closeHttpProxyServer() : initHttpProxyServer();
+        if (proxyCode === 0 && !isMockStarted) {
+          isMockStarted = true;
+          mockServer(isSysAfterInit, function () {
+            httpServer ? closeHttpProxyServer() : initHttpProxyServer();
+          });
+        } else {
+          httpServer ? closeHttpProxyServer() : initHttpProxyServer();
+        }
       }
     });
   }
@@ -81,13 +83,13 @@ module['exports'] = function () {
    * 创建代理服务器
    ***************************************************************************/
   function initHttpProxyServer() {
-    if (!isServerOnInit) processProgressBar('create', 'start');
+    if (isSysAfterInit) processProgressBar('start', progressHints['create']);
 
     proxyServer = httpProxy.createProxyServer({target: proxyStr});
 
     proxyServer.on('error', function(){
-      checkTaskStatusOnMissionEnd();
-      valueLooker('Proxy Server error!', {title: 'Msg From Proxy-Server', theme: 'error'});
+      isSysAvailable = true;
+      valueLooker('Proxy Server error!', {title: 'Msg From NDPS', theme: 'error'});
     });
 
     httpServer = http.createServer(function (request, response) {
@@ -103,15 +105,16 @@ module['exports'] = function () {
     });
 
     httpServer.listen(PORT, function () {
-      if (!isServerOnInit) {
-        processProgressBar('create', 'stop', function() {
-          valueLooker('The proxy target is: ' + proxyStr, {title: 'Msg From Proxy-Server', theme: 'verbose'});
-          checkTaskStatusOnMissionEnd();
+      if (isSysAfterInit) {
+        processProgressBar('stop', progressHints['create'], function() {
+          isSysAvailable = true;
+          valueLooker('The new proxy target is: ' + proxyStr, {title: 'Msg From NDPS', theme: 'verbose'});
         });
       } else {
-        isServerOnInit = false;
-        valueLooker('The proxy target is: ' + proxyStr, {title: 'Msg From Proxy-Server', theme: 'verbose'});
-        checkTaskStatusOnMissionEnd();
+        isSysAfterInit = true;
+        isSysAvailable = true;
+        var ndpsStartedMsg = 'The NDPS(Node-Dynamic-Proxy-Server) is started!\nThe http-proxy target is: ' + proxyStr;
+        valueLooker(ndpsStartedMsg, {title: 'Msg From NDPS', theme: 'verbose'});
       }
     });
   }
@@ -120,7 +123,7 @@ module['exports'] = function () {
    * 关闭代理服务器
    ***************************************************************************/
   function closeHttpProxyServer() {
-    processProgressBar('close', 'start');
+    processProgressBar('start', progressHints['close']);
 
     sockets.forEach(function(socket){
       socket.destroy();
@@ -130,7 +133,7 @@ module['exports'] = function () {
 
     setTimeout(function(){
       httpServer.close(function() {
-        processProgressBar('close', 'stop', function () {
+        processProgressBar('stop', progressHints['close'], function () {
           initHttpProxyServer();
         });
       });
@@ -138,22 +141,11 @@ module['exports'] = function () {
   }
 
   /**
-   * 任务执行完毕时检测配置文件是否产生新变化
+   * 更换代理时的进度条
    ***************************************************************************/
-  function checkTaskStatusOnMissionEnd() {
-    isSysAvailable = true;
-    if (isHaveNewTask) {
-      isHaveNewTask = false;
-      getProxyConfig();
-    }
-  }
-
-  /**
-   * 开启和关闭代理时的进度条
-   ***************************************************************************/
-  function processProgressBar(type, status, onStopped) {
+  function processProgressBar(status, progressMsg, onStopped) {
     if (status === 'start') {
-      progressBar = new ProgressBar(progressHints[type] + ' [:bar] :percent', {
+      progressBar = new ProgressBar(progressMsg + ' [:bar] :percent', {
         complete: '=',
         incomplete: ' ',
         width: 31,
@@ -182,13 +174,5 @@ module['exports'] = function () {
         }
       }, tickInterval);
     }
-  }
-
-  /**
-   * 启动桩服务器
-   ***************************************************************************/
-  function createMockProxyServer() {
-    isMockStarted = true;
-    require('./mock_server')();
   }
 };
