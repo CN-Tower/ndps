@@ -72,7 +72,7 @@ module['exports'] = function (opt) {
 
       var proxyIdx = parseInt(proxyData.split(proxyIdxAnchor)[1].substr(0, 3));
 
-      proxies = eval(proxyData.split(proxiesAnchor)[1]);
+      eval(proxyData.split(proxiesAnchor)[1]);
 
       if (!proxies.hasOwnProperty(proxyIdx)) {
         var proxyErrHint = 'Proxy Index error, please select again!';
