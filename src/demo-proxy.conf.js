@@ -3,8 +3,7 @@ var proxies, proxyTarget, isEnableNDPS, ndpsConf, proxyConf;
 /**
  * 【后端环境列表】在此处设置常用的后端环境
  *************************************************************************************/
-/*proxies*/
-proxies = /*proxies*/{
+/*proxies*/proxies = {
   0: 'http://localhost:8101',
   1: 'http://10.93.128.155:10080',
   2: 'http://10.62.107.136:10080',
