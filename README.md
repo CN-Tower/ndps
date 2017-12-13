@@ -22,6 +22,7 @@ $ npm install --save-dev ndps
 
 # Config
 > package.json
+------------------------------------------------------------------
 {
   ...
   "scripts": {
@@ -32,6 +33,7 @@ $ npm install --save-dev ndps
 }
 
 > proxy.conf.js
+------------------------------------------------------------------
 // Set proxies
 /*proxies*/
 var proxies = {
@@ -70,11 +72,11 @@ module.exports = proxyConf;
 ```
 
 ### Effect pictures
-Start NDPS:
+Start NDPS:<br>
 <img src="src/img/ndps0.jpg" width="480" alt="ndps"/><br>
-Change proxy target:
+Change proxy target:<br>
 <img src="src/img/ndps1.jpg" width="480" alt="ndps"/><br>
-Some other case:
+Some other case:<br>
 <img src="src/img/ndps2.jpg" width="480" alt="ndps"/><br>
 <img src="src/img/ndps3.jpg" width="480" alt="ndps"/>
 
