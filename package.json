@@ -1,6 +1,6 @@
 {
   "name": "ndps",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A dynamic proxy server of nodeJS",
   "main": "ndps.js",
   "scripts": {
