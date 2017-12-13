@@ -26,7 +26,11 @@ $ npm install --save-dev ndps
 {
   ...
   "scripts": {
-    "server": ng serve -pc proxy.conf.js
+    "start": "npm-run-all -p proxy server",
+    "server": ng serve -pc proxy.conf.js
+    "proxy": "node proxy.conf.js",
+    "mock": "node ./src/mock/mock.js",
+    "ndps": "node proxy.conf.js ndps"
     ...
   }
   ...
