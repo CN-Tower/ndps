@@ -1,16 +1,19 @@
-module['exports'] = function (isShowBar, callBack) {
+if(process.argv[1].indexOf('mock.js') > -1) mockServer(true);
+
+module['exports'] = mockServer;
+
+function mockServer(isShowBar, callBack) {
   var restify = require('restify');
   var valueLooker = require('value-looker');
   var ProgressBar = require('progress');
-  var partition = require('./partition/index');
+  var partition = require('./micro-service/index');
 
   var server = restify.createServer(null);
-  var mockFilePath = './src/mock/partition';
   var PORT = process.env.PORT || 8101;
 
   var progressTimer, progressBar, tickInterval;
   var progressHints = 'Starting the Mock-Server';
-  var mockServerMsg = 'The Mock-Server is started at: http://localHost:' + PORT;
+  var mockServerMsg = 'The Mock-Server is started at: http://localhost:' + PORT;
   var isSysAvailable = false;
 
   if (isShowBar) processProgressBar('start');
@@ -43,6 +46,7 @@ module['exports'] = function (isShowBar, callBack) {
    ***************************************************************************/
   function processProgressBar(status, onStopped) {
     if (status === 'start') {
+      console.log('');
       progressBar = new ProgressBar(progressHints + ' [:bar] :percent', {
         complete: '=',
         incomplete: ' ',
@@ -73,4 +77,4 @@ module['exports'] = function (isShowBar, callBack) {
       }, tickInterval);
     }
   }
-};
+}

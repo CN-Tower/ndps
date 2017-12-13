@@ -1,14 +1,14 @@
-module['exports'] = function () {
+module['exports'] = function (opt) {
   var fs = require('fs');
   var http = require('http');
   var httpProxy = require('http-proxy');
   var valueLooker = require('value-looker');
   var ProgressBar = require('progress');
-  var mockServer = require('./mock');
 
   var proxies, proxyStr;
   var proxyServer, httpServer;
   var progressTimer, progressBar, tickInterval;
+  var port, proxyConfPath, proxiesAnchor, proxyIdxAnchor, isExistMockServer, mockServerPath, mockServerIdx;
 
   var progressHints = {
     create: 'Creating new Proxy Server',
@@ -19,13 +19,32 @@ module['exports'] = function () {
   var isSysAfterInit = false;
   var isSysAvailable = true;
 
-  var proxyPath = 'proxy.conf.js';
-  var PORT = 8181;
   var sockets = [];
+
+
+  if(opt && opt.hasOwnProperty('ndpsPort') && opt.ndpsPort) {
+    port = opt.ndpsPort;
+  } else {
+    throw new Error('NDPS port error!');
+  }
+  if(opt && opt.hasOwnProperty('proxyConfPath') && opt.proxyConfPath) {
+    proxyConfPath = opt.proxyConfPath;
+  } else {
+    throw new Error('Proxy Conf path error!');
+  }
+  if(opt && opt.hasOwnProperty('proxiesAnchor') && opt.proxiesAnchor) {
+    proxiesAnchor = opt.proxiesAnchor;
+  } else {
+    throw new Error('Proxies Anchor error!');
+  }
+  if(opt && opt.hasOwnProperty('proxyIdxAnchor') && opt.proxyIdxAnchor) {
+    proxyIdxAnchor = opt.proxyIdxAnchor;
+  } else {
+    throw new Error('proxy Index Anchor error!');
+  }
 
   getProxyConfig();
   watchProxyConfigFile();
-
 
   /**
    * 监听代理配置文件(proxy.conf.js)
@@ -46,30 +65,33 @@ module['exports'] = function () {
 
     if (isSysAfterInit) valueLooker('Checking changes...', {title: 'Msg From NDPS', theme: 'verbose'});
 
-    fs.readFile(proxyPath, 'utf8', function (err, proxyData) {
+    fs.readFile(proxyConfPath, 'utf8', function (err, proxyData) {
       if(err) throw err;
 
       proxyData = proxyData.replace(/\s*/mg, '');
 
-      var proxyCode = parseInt(proxyData.split('proxies[')[1].substr(0, 3));
+      var proxyIdx = parseInt(proxyData.split(proxyIdxAnchor)[1].substr(0, 3));
 
-      eval(proxyData.split('/*proxies*/')[1]);
+      eval(proxyData.split(proxiesAnchor)[1]);
 
-      if (!proxies.hasOwnProperty(proxyCode)) {
-        var proxyErrHint = 'Proxy error, please select again!';
+      if (!proxies.hasOwnProperty(proxyIdx)) {
+        var proxyErrHint = 'Proxy Index error, please select again!';
         if (!isSysAfterInit) throw new Error(proxyErrHint);
         isSysAvailable = true;
         valueLooker(proxyErrHint, {title: 'Msg From NDPS', theme: 'error'});
 
-      } else if (proxies[proxyCode] === proxyStr) {
+      } else if (proxies[proxyIdx] === proxyStr) {
         isSysAvailable = true;
         valueLooker('No changes were detected!', {title: 'Msg From NDPS', theme: 'warn'});
 
       } else {
-        proxyStr = proxies[proxyCode];
-        if (proxyCode === 0 && !isMockStarted) {
+        proxyStr = proxies[proxyIdx];
+        isExistMockServer = opt && opt.hasOwnProperty('mockServerPath') && opt.mockServerPath;
+        mockServerPath = isExistMockServer ? opt.mockServerPath : '';
+        mockServerIdx = isExistMockServer && opt.hasOwnProperty('mockServerIdx') ? opt.mockServerIdx : NaN;
+        if (isExistMockServer && proxyIdx === mockServerIdx && !isMockStarted) {
           isMockStarted = true;
-          mockServer(isSysAfterInit, function () {
+          require(mockServerPath)(isSysAfterInit, function () {
             httpServer ? closeHttpProxyServer() : initHttpProxyServer();
           });
         } else {
@@ -104,7 +126,7 @@ module['exports'] = function () {
       });
     });
 
-    httpServer.listen(PORT, function () {
+    httpServer.listen(port, function () {
       if (isSysAfterInit) {
         processProgressBar('stop', progressHints['create'], function() {
           isSysAvailable = true;

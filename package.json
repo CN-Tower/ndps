@@ -1,0 +1,27 @@
+{
+  "name": "ndps",
+  "version": "1.0.0",
+  "description": "A dynamic proxy server of nodeJS",
+  "main": "ndps.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CN-Tower/ndps.git"
+  },
+  "keywords": [
+    "ndps"
+  ],
+  "author": "CN-Tower",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CN-Tower/ndps/issues"
+  },
+  "homepage": "https://github.com/CN-Tower/ndps#readme",
+  "dependencies": {
+    "http-proxy": "^1.16.2",
+    "value-looker": "^2.1.2"
+  }
+}
