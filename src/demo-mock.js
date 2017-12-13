@@ -1,6 +1,4 @@
-if (process.argv[1].indexOf('mock.js') > -1) {
-  process.argv[2] && process.argv[2] === 'dev' ? mockServer(false) : mockServer(true);
-}
+if (process.argv[1].indexOf('mock.js') > -1) mockServer(true);
 
 module['exports'] = mockServer;
 
