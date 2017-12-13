@@ -9,6 +9,7 @@
 
 但是，不论是angular-cli工程还是webpack工程，在开发模式下每次更换代理往往都需要重新start工程来使代理生效，而重新start就意味着一个webpack compile的过程，这对一个大型Angular工程来说时间开消是很大的，严重影响开发效率。
 有没有一种办法，能让Angular工程在更改完http代理后不需要重新start就能自动生效呢？ 这时候NDPS(node-dynamic-proxy-serve)就能派上用场了！
+
 NDPS(Node-Dynamic-Proxy-Server)是一个基于nodeJS的动态代理服务器，如果在npm start前启用了NDPS，Angular-cli内置的dev-server的目标代理(proxyTarget)就会被设定到NDPS(http://localhost:8181),
 此时，NDPS则会读取和监听上面的环境配置，并根据配置的把http请求转发到对应的后端服务器上。
 这样做的主要好处是方便Start后需要更换后端环境的场景，NDPS可以在start的状态下动态切换环境，避免了重新运行npm start的时间消耗。
