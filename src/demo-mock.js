@@ -1,7 +1,7 @@
 var chokidar = require('chokidar');
 var ProgressBar = require('progress');
 var valueLooker = require('value-looker');
-var child_process = require('child_process');
+var childProcess = require('child_process');
 var progressTimer, progressBar, tickInterval, watcher, mockProcess;
 var PORT = 8101;
 var mockServerMsg = 'The Mock-Server is started at: http://localhost:' + PORT;
@@ -100,7 +100,7 @@ function processProgressBar(status, onStopped) {
  * @returns {ChildProcess}
  */
 function createMockProcess(callback) {
-  var child  = child_process.spawn('node', [__filename, 'spawn'], {encoding: 'utf-8'});
+  var child  = childProcess.spawn('node', [__filename, 'spawn'], {encoding: 'utf-8'});
   child.stdout.on('data', function(data) {
     if (data.toString().indexOf('ok') > -1 && callback) {
       callback();
