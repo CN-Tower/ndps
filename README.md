@@ -17,56 +17,62 @@ NDPS(Node-Dynamic-Proxy-Server)是一个基于nodeJS的动态代理服务器，�
 ### Quick start
 **Make sure you have Node version >= 6.0 and NPM >= 3**
 
-```bash
-# Install
+#### Install
+```
 $ npm install --save-dev ndps
+```
 
-# Config
-> package.json
-------------------------------------------------------------------
+#### Config
+//package.json
+```
 {
   ...
   "scripts": {
     "server": ng serve -pc proxy.conf.js
+    "mock": "node ./src/mock/mock.js",
+    "ndps": "node proxy.conf.js ndps",
+    "proxy": "node proxy.conf.js",
     ...
   }
   ...
 }
+```
+// proxy.conf.js
+```
+const ndpsServer = require('ndps');
 
-> proxy.conf.js
-------------------------------------------------------------------
-// Set proxies
-/*proxies*/
-var proxies = {
+var proxies = /*proxies*/{
   0: 'http://localhost:8101',
   1: 'http://10.93.128.155:10080',
   2: 'http://10.62.107.136:10080',
-  ...
-};
-/*proxies*/
+}/*proxies*/;
 
-// Set proxy target
 var proxyTarget = proxies[ 0 ];
 
-// Config NDPS
-var ndpsConf = {
+ndpsConf = {
   ndpsPort: 8181,
-  mockServerIdx: 0,
   proxiesAnchor: '/*proxies*/',
   proxyIdxAnchor: 'proxies[',
-  proxyConfPath: path.join(__dirname, 'proxy.conf.js'),
-  mockServerPath: path.join(__dirname, 'src/mock/mock.js')
+  proxyConfPath: __filename,
+  onChangeProxy: (info, done) => {
+    //if (info.proxyTarget === proxies[0].trim() && !isMockStarted) {
+    //  mockServer(!info.isInit, () => done());
+    //  isMockStarted = true;
+    //} else {
+    //  done();
+    //}
+    done();
+  }
 };
 
-// Config proxy
 var proxyConf = [{
   context: ["/api"],
-  target: proxyTarget,
+  target: `http://localhost:${ndpsConf.ndpsPort}`,
   secure: false
 }];
 
 // Start NDPS
- require('ndps')(ndpsConf);
+ndpsServer(ndpsConf);
  
 // Export Conf
 module.exports = proxyConf;
