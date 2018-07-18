@@ -1,31 +1,35 @@
-var chokidar = require('chokidar');
-var ProgressBar = require('progress');
-var valueLooker = require('value-looker');
-var childProcess = require('child_process');
-var progressTimer, progressBar, tickInterval, watcher, mockProcess;
-var PORT = 8101;
-var mockServerMsg = 'The Mock-Server is started at: http://localhost:' + PORT;
-var mockState = 'start';
-var progressWidths = { start: 32, restart: 30 };
-var progressHints = {
-  start: 'Starting the Mock-Server',
-  restart: 'Restarting the Mock-Server'
-};
-var isShowProgress = true;
+const fn = require('funclib');
+const chokidar = require('chokidar');
+const child_process = require('child_process');
+const exec  = child_process.exec;
+const spawn = child_process.spawn;
 
+const PORT = 8101;
+const progress = {
+  width: { start: 34, restart: 32 },
+  title: {
+    start: 'Starting the Mock-Server',
+    restart: 'Restarting the Mock-Server'
+  }
+} 
+
+let mockState = 'start';
+let isShowProgress = true;
+let watcher, mockProcess;
+
+// 检测到桩变化并重启桩服务器
 if (process.argv[2] === 'spawn') {
   createMockServer();
-} else {
-  // 判断是否直接启桩
-  if (process.argv[1].indexOf('mock.js') > -1) {
-    initMockServer();
-  }
-  // 输出启桩函数
+}
+// 非变化检测启桩
+else {
   module.exports = function(isShowBar, callback) {
     isShowProgress = isShowBar;
     initMockServer(callback);
   };
- // 监听文件变化后重启桩服务器
+  if (process.argv[1].indexOf('mock.js') > -1) {
+    initMockServer();
+  }
   if (!watcher) {
     watcher = chokidar.watch(__dirname).on('change', function(){
       if (mockProcess) {
@@ -37,81 +41,55 @@ if (process.argv[2] === 'spawn') {
 }
 
 /**
- * 根据配置确定是否显示进度条
+ * 检测桩是否运行,根据配置确定是否显示进度条并创建桩进程
  * @param callback
- */
+ */ 
 function initMockServer(callback) {
-  if (isShowProgress) {
-    processProgressBar('start');
-    mockProcess = createMockProcess(function () {
-      processProgressBar('stop', function () {
-        valueLooker(mockServerMsg, {title: 'Msg From Mock-Server', theme: 'verbose'});
+  const mockServerMsg = 'The Mock-Server is started at: http://localhost:' + PORT;
+  exec(`netstat -apn | grep ${PORT} | cut -d "/" -f 1`, (e , stdout , stderr) => {
+    if (stdout) {
+      const mockPid = parseInt(stdout.toString().split('LISTEN')[1]);
+      if (mockPid) {
+        fn.log(`Killing old mock process(pid: ${mockPid})`, {
+          title: 'Msg From Mock-Server', color: 'cyan'
+        });
+        exec(`kill -9 ${mockPid}`);
+      }
+    }
+    if (isShowProgress) {
+      fn.progress.start({title: progress.title[mockState], width: progress.width[mockState]});
+      mockProcess = createMockProcess(() => {
+        fn.progress.stop(() => {
+          fn.log(mockServerMsg, {title: 'Msg From Mock-Server', color: 'cyan'});
+          if (callback) callback();
+        });
+      });
+    } else {
+      mockProcess = createMockProcess(() => {
+        fn.log(mockServerMsg, {title: 'Msg From Mock-Server', color: 'cyan'});
         if (callback) callback();
       });
-    });
-  } else {
-    mockProcess = createMockProcess(function () {
-      valueLooker(mockServerMsg, {title: 'Msg From Mock-Server', theme: 'verbose'});
-      if (callback) callback();
-    });
-  }
-  isShowProgress = true;
+    }
+    isShowProgress = true;
+  });
 }
 
 /**
- * 开启和关闭服务器的进度条
- * @param status
- * @param onStopped
- */
-function processProgressBar(status, onStopped) {
-  if (status === 'start') {
-    progressBar = new ProgressBar(progressHints[mockState] + ' [:bar] :percent', {
-      complete: '=',
-      incomplete: ' ',
-      width: progressWidths[mockState],
-      total: 20
-    });
-    clearTimeout(progressTimer);
-    tickInterval = 250;
-    tickFun('+');
-  }
-  if (status === 'stop') {
-    clearTimeout(progressTimer);
-    tickInterval = 600;
-    tickFun('-');
-  }
-  function tickFun(type) {
-    progressTimer = setTimeout(function () {
-      progressBar.tick();
-      if (type === '+') tickInterval += 300;
-      if (type === '-') tickInterval -= tickInterval * 0.2;
-
-      if (progressBar.complete && status === 'stop') {
-        onStopped();
-      } else {
-        tickFun(type);
-      }
-    }, tickInterval);
-  }
-}
-/**
- * 创建桩服务器进程
+ * 创建桩服务器子进程
  * @param callback
  * @returns {ChildProcess}
  */
 function createMockProcess(callback) {
-  var child  = childProcess.spawn('node', [__filename, 'spawn'], {encoding: 'utf-8'});
-  child.stdout.on('data', function(data) {
+  const child = spawn('node', [__filename, 'spawn'], {encoding: 'utf-8'});
+  child.stdout.on('data', data => {
     if (data.toString().indexOf('ok') > -1 && callback) {
       callback();
     }
   });
-  child.stderr.on('data', function (err) {
+  child.stderr.on('data', err => {
     throw new Error(err);
   });
-  child.on('exit', function () {
-    initMockServer();
-  });
+  child.on('exit', () => initMockServer());
   return child;
 }
 
@@ -120,14 +98,12 @@ function createMockProcess(callback) {
  * @param onCreateEnd
  */
 function createMockServer() {
-  var restify = require('restify');
-  var partition = require('./micro-service/index');
-  var server = restify.createServer(null);
+  const restify = require('restify');
+  const partition = require('./micro-service/index');
+  const server = restify.createServer(null);
   server.use(restify.queryParser());
   server.use(restify.requestLogger());
   server.use(restify.bodyParser());
   partition(server);
-  server.listen(PORT, function () {
-    console.log('ok');
-  });
+  server.listen(PORT, () => console.log('ok'));
 }
