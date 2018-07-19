@@ -72,7 +72,7 @@ function initProxyServer() {
   else {
     proxyStr = proxies[proxyIdx];
     if (onChangeProxy) {
-      const ndpsInfo = { isInit: isSysOnInit, proxyTarget: proxyStr };
+      const ndpsInfo = { isInit: isSysOnInit, proxyIdx: proxyIdx, proxyTarget: proxyStr };
       if (onChangeProxy.length === 2) {
         onChangeProxy(ndpsInfo, () => startProxyServer());
       } else {
