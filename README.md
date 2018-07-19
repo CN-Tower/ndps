@@ -55,7 +55,7 @@ ndpsConf = {
   proxyIdxAnchor: 'proxies[',
   proxyConfPath: __filename,
   onChangeProxy: (info, done) => {
-    //if (info.proxyTarget === proxies[0].trim() && !isMockStarted) {
+    //if (info.proxyIdx === 0 && !isMockStarted) {
     //  mockServer(!info.isInit, () => done());
     //  isMockStarted = true;
     //} else {
