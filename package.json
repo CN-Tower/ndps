@@ -22,7 +22,6 @@
   "homepage": "https://github.com/CN-Tower/ndps#readme",
   "dependencies": {
     "funclib": "^2.1.14",
-    "http-proxy": "^1.16.2",
-    "progress": "^2.0.0"
+    "http-proxy": "^1.16.2"
   }
 }
