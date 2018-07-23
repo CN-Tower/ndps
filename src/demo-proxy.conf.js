@@ -1,5 +1,5 @@
-const path = require('path');
 const fn = require('funclib');
+const path = require('path');
 const ndpsServer = require('./ndps');
 const mockServer = require('./src/mock/mock');
 let proxies, proxyTarget, isEnableNDPS, ndpsConf, proxyConf, isMockStarted;
@@ -30,8 +30,8 @@ ndpsConf = {
   proxiesAnchor: '/*proxies*/',
   proxyIdxAnchor: 'proxies[',
   proxyConfPath: __filename,
-  onChangeProxy: (info, done) => {
-    if (info.proxyTarget === proxies[0].trim() && !isMockStarted) {
+  beforeProxyChange: (info, done) => {
+    if (info.proxyIdx === 0 && !isMockStarted) {
       mockServer(!info.isInit, () => done());
       isMockStarted = true;
     } else {
