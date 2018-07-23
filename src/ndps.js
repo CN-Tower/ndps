@@ -4,7 +4,7 @@ const http = require('http');
 const httpProxy = require('http-proxy');
 
 let proxies, proxyIdx, proxyStr, proxyServer, httpServer, proxyErrFlag
-  , port, proxyConfPath, proxiesAnchor, proxyIdxAnchor, onChangeProxy;
+  , port, proxyConfPath, proxiesAnchor, proxyIdxAnchor, beforeProxyChange;
 
 let isSysOnInit = true;
 let isSysAvailable = true;
@@ -19,8 +19,8 @@ module['exports'] = opt => {
 
 function getNdpsConfig(opt) {
   const getOrRaise = (path, errMsg) => {
-    if (fn.pick(opt, path)) {
-      return fn.pick(opt, path);
+    if (fn.get(opt, path)) {
+      return fn.get(opt, path);
     } else {
       throw new Error(errMsg);
     }
@@ -29,7 +29,7 @@ function getNdpsConfig(opt) {
   proxyConfPath = getOrRaise('/proxyConfPath', 'Proxy Conf path error!');
   proxiesAnchor = getOrRaise('/proxiesAnchor', 'Proxies Anchor error!');
   proxyIdxAnchor = getOrRaise('/proxyIdxAnchor', 'proxy Index Anchor error!');
-  onChangeProxy = fn.pick(opt, '/onChangeProxy', 'fun');
+  beforeProxyChange = fn.get(opt, '/beforeProxyChange', 'fun');
 }
 
 function getProxyConfig() {
@@ -71,12 +71,14 @@ function initProxyServer() {
   }
   else {
     proxyStr = proxies[proxyIdx];
-    if (onChangeProxy) {
-      const ndpsInfo = { isInit: isSysOnInit, proxyIdx: proxyIdx, proxyTarget: proxyStr };
-      if (onChangeProxy.length === 2) {
-        onChangeProxy(ndpsInfo, () => startProxyServer());
+    if (beforeProxyChange) {
+      const ndpsInfo = {
+        isInit: isSysOnInit, proxyIdx: proxyIdx, proxyTarget: proxyStr
+      };
+      if (beforeProxyChange.length === 2) {
+        beforeProxyChange(ndpsInfo, () => startProxyServer());
       } else {
-        onChangeProxy(ndpsInfo);
+        beforeProxyChange(ndpsInfo);
         startProxyServer();
       }
     } else {
