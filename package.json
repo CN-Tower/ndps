@@ -1,6 +1,6 @@
 {
   "name": "ndps",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A dynamic proxy server of nodeJS",
   "main": "ndps.js",
   "scripts": {
@@ -12,7 +12,19 @@
     "url": "git+https://github.com/CN-Tower/ndps.git"
   },
   "keywords": [
-    "ndps"
+    "ndps",
+    "proxy",
+    "http",
+    "https",
+    "http-proxy",
+    "https-proxy",
+    "nodejs-http-proxy",
+    "nodejs-https-proxy",
+    "proxy-server",
+    "dynamic-proxy",
+    "dynamic-http-proxy",
+    "dynamic-proxy-server",
+    "nodejs-dynamic-proxy-server"
   ],
   "author": "CN-Tower",
   "license": "ISC",

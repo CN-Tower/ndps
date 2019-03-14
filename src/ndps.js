@@ -96,7 +96,7 @@ function createProxyServer() {
     fn.progress.start({ title: 'Creating new Proxy Server', width: 33 });
   }
   sockets = [];
-  proxyServer = httpProxy.createProxyServer({ target: proxyStr });
+  proxyServer = httpProxy.createProxyServer({ target: proxyStr, secure: false });
   proxyServer.on('error', function () {
     isSysAvailable = true;
     fn.log('Proxy Server error!', { title: 'Msg From NDPS', color: 'red' });
