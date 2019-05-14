@@ -32,7 +32,7 @@ const ndpsConf = {
 };
 
 const proxyConf = [{
-  context: [ '/p6.2', '/p3.2', '/p6.0', '/p5.2', '/p4.0', '/p5.0', '/p1.0', '/p5.6', ],
+  context: [ 'api', 'volume', 'network' ],
   target: proxyTarget,
   secure: false
 }];
