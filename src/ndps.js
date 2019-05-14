@@ -10,7 +10,7 @@ let isSysOnInit = true;
 let isSysAvailable = true;
 let sockets = [];
 
-module['exports'] = opt => {
+module.exports = (opt) => {
   getNdpsConfig(opt);
   getProxyConfig();
   initProxyServer();
@@ -34,7 +34,7 @@ function getNdpsConfig(opt) {
 
 function getProxyConfig() {
   if (!isSysOnInit) {
-    fn.log('Checking changes...', { title: 'Msg From NDPS', color: 'cyan' });
+    fn.log('Checking changes...', { title: 'Msg From NDPS' });
   }
   proxyErrFlag = false;
   isSysAvailable = false;
@@ -114,15 +114,11 @@ function createProxyServer() {
     if (isSysOnInit) {
       isSysOnInit = false;
       isSysAvailable = true;
-      fn.log(`The NDPS(Node-Dynamic-Proxy-Server) is started!\nThe http-proxy target is: ${proxyStr}`, {
-        title: 'Msg From NDPS', color: 'cyan'
-      });
+      fn.log(`The NDPS(Node-Dynamic-Proxy-Server) is started!\nThe http-proxy target is: ${proxyStr}`, 'Msg From NDPS');
     } else {
       fn.progress.stop(() => {
         isSysAvailable = true;
-        fn.log(`The new proxy target is: ${proxyStr}`, {
-          title: 'Msg From NDPS', color: 'cyan'
-        });
+        fn.log(`The new proxy target is: ${proxyStr}`, 'Msg From NDPS');
       });
     }
   });
@@ -132,9 +128,7 @@ function reCreateProxyServer() {
   fn.progress.start({ title: 'Stopping old Proxy Server', width: 33 });
   sockets.forEach(socket => socket.destroy());
   proxyServer.close();
-  fn.timeout(1000, () => {
-    httpServer.close(() => fn.progress.stop(() => createProxyServer()));
-  });
+  fn.timeout(1000, () => httpServer.close(() => fn.progress.stop(() => createProxyServer())));
 }
 
 function watchProxyConfigFile() {

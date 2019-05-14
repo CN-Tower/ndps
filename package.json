@@ -1,6 +1,6 @@
 {
   "name": "ndps",
-  "version": "2.0.4",
+  "version": "2.1.1",
   "description": "A dynamic proxy server of nodeJS",
   "main": "ndps.js",
   "scripts": {
@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/CN-Tower/ndps#readme",
   "dependencies": {
-    "funclib": "^2.1.14",
+    "funclib": "^3.5.7",
     "http-proxy": "^1.16.2"
   }
 }
