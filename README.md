@@ -36,42 +36,55 @@ $ npm install --save-dev ndps
 ```
 // proxy.conf.js
 ```
+const fn = require('funclib');
 const ndpsServer = require('ndps');
 
+/**
+ * Your proxies list
+ */
 var proxies = /*proxies*/{
   0: 'http://localhost:8101',
   1: 'http://10.93.128.155:10080',
   2: 'http://10.62.107.136:10080',
 }/*proxies*/;
 
-var proxyTarget = proxies[ 0 ];
+/**
+ * Your target Proxy
+ */
+const proxyTarget = proxies[ 1 ];
 
-ndpsConf = {
+/**
+ * NDPS Switch
+ */
+const isEnableNDPS = true;
+
+/**
+ * NDPS & Dev-server config
+ */
+const ndpsConf = {
   ndpsPort: 8181,
   proxiesAnchor: '/*proxies*/',
   proxyIdxAnchor: 'proxies[',
-  proxyConfPath: __filename,
-  beforeProxyChange: (info, done) => {
-    //if (info.proxyIdx === 0 && !isMockStarted) {
-    //  mockServer(!info.isInit, () => done());
-    //  isMockStarted = true;
-    //} else {
-    //  done();
-    //}
-    done();
-  }
+  proxyConfPath: __filename
 };
 
+/**
+ * Proxy config
+ */
 var proxyConf = [{
-  context: ["/api"],
+  context: ['/v1.0', '/v2.0'],
   target: `http://localhost:${ndpsConf.ndpsPort}`,
   secure: false
 }];
 
-// Start NDPS
-ndpsServer(ndpsConf);
- 
-// Export Conf
+if (isEnableNDPS) {
+  ndpsServer(ndpsConf);
+  fn.log('The NDPS(Node-Dynamic-Proxy-Server) is Enabled!', 'Msg From proxy.conf.js');
+  proxyConf[0].target = `http://localhost:${ndpsConf.ndpsPort}`;
+} else {
+  fn.log(`The Http-Proxy target is: ${proxyTarget}`, 'Msg From proxy.conf.js');
+}
+
 module.exports = proxyConf;
 ```
 
